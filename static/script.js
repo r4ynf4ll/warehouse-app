@@ -3,6 +3,7 @@ const state = {
 	filtered: [],
 	sortBy: "id",
 	sortDir: "asc",
+	deletingIds: new Set(),
 };
 
 const refs = {
@@ -117,6 +118,8 @@ function renderTable() {
 	refs.tableMessage.textContent = `${state.filtered.length} row(s) loaded`;
 
 	for (const row of state.filtered) {
+		const rowId = toSafeNumber(row.id);
+		const isDeleting = state.deletingIds.has(rowId);
 		const tr = document.createElement("tr");
 		tr.innerHTML = `
 			<td>${row.id ?? ""}</td>
@@ -125,8 +128,51 @@ function renderTable() {
 			<td>${toSafeNumber(row.quantity).toLocaleString()}</td>
 			<td>${money(row.price)}</td>
 			<td>${row.supplier ?? "-"}</td>
+			<td class="row-actions">
+				<button class="danger-btn" type="button" data-delete-id="${rowId}" ${isDeleting ? "disabled" : ""}>
+					${isDeleting ? "Deleting..." : "Delete"}
+				</button>
+			</td>
 		`;
 		refs.tableBody.appendChild(tr);
+	}
+}
+
+async function deleteInventoryItem(id) {
+	if (!Number.isInteger(id) || id <= 0) {
+		setStatus("Delete aborted: invalid item id", "error");
+		return;
+	}
+
+	const confirmed = window.confirm(`Delete inventory item #${id}? This cannot be undone.`);
+	if (!confirmed) {
+		return;
+	}
+
+	state.deletingIds.add(id);
+	setStatus(`Deleting item #${id}`, "neutral");
+	applyFilters();
+
+	try {
+		const response = await fetch(`/inventory/${id}`, {
+			method: "DELETE",
+		});
+
+		if (!response.ok) {
+			throw new Error(`Delete failed: ${response.status}`);
+		}
+
+		state.inventory = state.inventory.filter((item) => toSafeNumber(item.id) !== id);
+		updateStats(state.inventory);
+		setStatus(`Deleted item #${id}`, "ok");
+		applyFilters();
+	} catch (error) {
+		setStatus("Delete failed. Try again.", "error");
+		console.error("Inventory delete error:", error);
+		applyFilters();
+	} finally {
+		state.deletingIds.delete(id);
+		applyFilters();
 	}
 }
 
@@ -164,6 +210,20 @@ function wireEvents() {
 	refs.searchInput.addEventListener("input", applyFilters);
 	refs.categoryFilter.addEventListener("change", applyFilters);
 	refs.refreshBtn.addEventListener("click", loadInventory);
+	refs.tableBody.addEventListener("click", (event) => {
+		const target = event.target;
+		if (!(target instanceof HTMLElement)) {
+			return;
+		}
+
+		const deleteButton = target.closest("button[data-delete-id]");
+		if (!(deleteButton instanceof HTMLButtonElement)) {
+			return;
+		}
+
+		const id = Number(deleteButton.dataset.deleteId);
+		void deleteInventoryItem(id);
+	});
 
 	for (const header of refs.sortableHeaders) {
 		header.addEventListener("click", () => {

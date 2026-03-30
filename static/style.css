@@ -281,6 +281,7 @@ td {
 	padding: 0.62rem 0.75rem;
 	border-bottom: 1px solid #ece6da;
 	font-size: 0.92rem;
+	vertical-align: middle;
 }
 
 th {
@@ -302,6 +303,30 @@ tbody tr:nth-child(odd) {
 
 tbody tr:hover {
 	background: #f1fafc;
+}
+
+.row-actions {
+	white-space: nowrap;
+}
+
+.danger-btn {
+	border: 1px solid #8f3a1f;
+	border-radius: 8px;
+	background: linear-gradient(160deg, #c4582f, #a93f1d);
+	color: #fff;
+	padding: 0.4rem 0.55rem;
+	font: 700 0.78rem "Space Grotesk", "Segoe UI", sans-serif;
+	cursor: pointer;
+	letter-spacing: 0.03em;
+}
+
+.danger-btn:hover {
+	filter: brightness(1.06);
+}
+
+.danger-btn:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
 }
 
 .future-tools {

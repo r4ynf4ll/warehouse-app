@@ -28,15 +28,6 @@
 				<h2>API Status</h2>
 				<p id="api-status" class="status-chip">Waiting to load</p>
 			</section>
-
-			<section class="panel-block">
-				<h2>Next Endpoints</h2>
-				<ul class="endpoint-list">
-					<li><span>POST</span> /inventory</li>
-					<li><span>PATCH</span> /inventory/{id}</li>
-					<li><span>DELETE</span> /inventory/{id}</li>
-				</ul>
-			</section>
 		</aside>
 
 		<section class="panel content-panel">
@@ -94,6 +85,7 @@
 								<th scope="col" data-sort="quantity">Qty</th>
 								<th scope="col" data-sort="price">Price</th>
 								<th scope="col" data-sort="supplier">Supplier</th>
+								<th scope="col">Actions</th>
 							</tr>
 						</thead>
 						<tbody id="inventory-table-body"></tbody>
@@ -101,15 +93,6 @@
 				</div>
 			</section>
 
-			<section class="future-tools" aria-label="Future write operations">
-				<h3>Write Operations Staging Area</h3>
-				<p>This frontend is wired for read-only data now and visually prepared for create, update, and delete endpoints later.</p>
-				<div class="staged-actions">
-					<button class="btn ghost" type="button" disabled>Add Product (pending endpoint)</button>
-					<button class="btn ghost" type="button" disabled>Edit Product (pending endpoint)</button>
-					<button class="btn ghost" type="button" disabled>Delete Product (pending endpoint)</button>
-				</div>
-			</section>
 		</section>
 	</main>
 
