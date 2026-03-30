@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Warehouse Admin Console</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="page-bg" aria-hidden="true"></div>
+
+	<main class="layout">
+		<aside class="panel side-panel">
+			<h1>Warehouse DB</h1>
+			<p class="muted">Inventory administration</p>
+
+			<nav class="nav-list" aria-label="Primary">
+				<button class="nav-btn nav-btn-active" type="button">Inventory Table</button>
+				<button class="nav-btn" type="button" disabled>Incoming Orders</button>
+				<button class="nav-btn" type="button" disabled>Supplier Ledger</button>
+				<button class="nav-btn" type="button" disabled>Audit Trail</button>
+			</nav>
+
+			<section class="panel-block">
+				<h2>API Status</h2>
+				<p id="api-status" class="status-chip">Waiting to load</p>
+			</section>
+
+			<section class="panel-block">
+				<h2>Next Endpoints</h2>
+				<ul class="endpoint-list">
+					<li><span>POST</span> /inventory</li>
+					<li><span>PATCH</span> /inventory/{id}</li>
+					<li><span>DELETE</span> /inventory/{id}</li>
+				</ul>
+			</section>
+		</aside>
+
+		<section class="panel content-panel">
+			<header class="toolbar">
+				<div>
+					<p class="eyebrow">Live Data View</p>
+					<h2>Inventory Records</h2>
+				</div>
+
+				<div class="toolbar-actions">
+					<label class="control-group" for="search-input">
+						<span>Search</span>
+						<input id="search-input" type="search" placeholder="Name, category, supplier">
+					</label>
+
+					<label class="control-group" for="category-filter">
+						<span>Category</span>
+						<select id="category-filter">
+							<option value="all">All</option>
+						</select>
+					</label>
+
+					<button id="refresh-btn" class="btn" type="button">Refresh Data</button>
+				</div>
+			</header>
+
+			<section class="stats-grid" aria-label="Inventory stats">
+				<article class="stat-card">
+					<p>Total Items</p>
+					<strong id="total-items">0</strong>
+				</article>
+				<article class="stat-card">
+					<p>Total Quantity</p>
+					<strong id="total-qty">0</strong>
+				</article>
+				<article class="stat-card">
+					<p>Low Stock</p>
+					<strong id="low-stock">0</strong>
+				</article>
+				<article class="stat-card">
+					<p>Inventory Value</p>
+					<strong id="inventory-value">$0.00</strong>
+				</article>
+			</section>
+
+			<section class="table-wrap" aria-label="Inventory table panel">
+				<p id="table-message" class="table-message">Loading inventory...</p>
+				<div class="table-scroll">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col" data-sort="id">ID</th>
+								<th scope="col" data-sort="product_name">Product</th>
+								<th scope="col" data-sort="category">Category</th>
+								<th scope="col" data-sort="quantity">Qty</th>
+								<th scope="col" data-sort="price">Price</th>
+								<th scope="col" data-sort="supplier">Supplier</th>
+							</tr>
+						</thead>
+						<tbody id="inventory-table-body"></tbody>
+					</table>
+				</div>
+			</section>
+
+			<section class="future-tools" aria-label="Future write operations">
+				<h3>Write Operations Staging Area</h3>
+				<p>This frontend is wired for read-only data now and visually prepared for create, update, and delete endpoints later.</p>
+				<div class="staged-actions">
+					<button class="btn ghost" type="button" disabled>Add Product (pending endpoint)</button>
+					<button class="btn ghost" type="button" disabled>Edit Product (pending endpoint)</button>
+					<button class="btn ghost" type="button" disabled>Delete Product (pending endpoint)</button>
+				</div>
+			</section>
+		</section>
+	</main>
+
+	<script src="script.js"></script>
+</body>
+</html>

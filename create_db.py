@@ -1,6 +1,6 @@
 import sqlite3
 
-connection = sqlite3.connect("inventory.db")
+connection = sqlite3.connect("warehouse.db")
 cursor = connection.cursor()
 
 cursor.execute("""
