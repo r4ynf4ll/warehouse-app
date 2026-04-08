@@ -50,6 +50,7 @@
 						</select>
 					</label>
 
+					<button id="add-btn" class="btn ghost" type="button">Add Item</button>
 					<button id="refresh-btn" class="btn" type="button">Refresh Data</button>
 				</div>
 			</header>
@@ -71,6 +72,50 @@
 					<p>Inventory Value</p>
 					<strong id="inventory-value">$0.00</strong>
 				</article>
+			</section>
+
+			<section id="inventory-form-panel" class="inventory-form-panel" aria-label="Inventory editor" hidden>
+				<div class="form-header-row">
+					<div>
+						<p id="inventory-form-eyebrow" class="eyebrow">Inventory Form</p>
+						<h3 id="inventory-form-title">Add Inventory Item</h3>
+					</div>
+					<button id="inventory-form-cancel" class="btn ghost" type="button">Cancel</button>
+				</div>
+
+				<form id="inventory-form" class="inventory-form" novalidate>
+					<label class="control-group" for="form-product-name">
+						<span>Product Name</span>
+						<input id="form-product-name" name="product_name" type="text" maxlength="120" required>
+					</label>
+
+					<label class="control-group" for="form-category">
+						<span>Category</span>
+						<input id="form-category" name="category" type="text" maxlength="80" required>
+					</label>
+
+					<label class="control-group" for="form-quantity">
+						<span>Quantity</span>
+						<input id="form-quantity" name="quantity" type="number" min="0" step="1" required>
+					</label>
+
+					<label class="control-group" for="form-price">
+						<span>Price</span>
+						<input id="form-price" name="price" type="number" min="0" step="0.01" required>
+					</label>
+
+					<label class="control-group" for="form-supplier">
+						<span>Supplier</span>
+						<input id="form-supplier" name="supplier" type="text" maxlength="120" placeholder="Optional supplier">
+					</label>
+
+					<p id="inventory-form-error" class="inventory-form-error" role="alert"></p>
+
+					<div class="inventory-form-actions">
+						<button id="inventory-form-submit" class="btn" type="submit">Save Item</button>
+						<button id="inventory-form-reset" class="btn ghost" type="button">Reset</button>
+					</div>
+				</form>
 			</section>
 
 			<section class="table-wrap" aria-label="Inventory table panel">

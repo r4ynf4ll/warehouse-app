@@ -4,6 +4,9 @@ const state = {
 	sortBy: "id",
 	sortDir: "asc",
 	deletingIds: new Set(),
+	formMode: "create",
+	editingId: null,
+	isSubmittingForm: false,
 };
 
 const refs = {
@@ -12,7 +15,21 @@ const refs = {
 	apiStatus: document.getElementById("api-status"),
 	searchInput: document.getElementById("search-input"),
 	categoryFilter: document.getElementById("category-filter"),
+	addBtn: document.getElementById("add-btn"),
 	refreshBtn: document.getElementById("refresh-btn"),
+	formPanel: document.getElementById("inventory-form-panel"),
+	form: document.getElementById("inventory-form"),
+	formTitle: document.getElementById("inventory-form-title"),
+	formEyebrow: document.getElementById("inventory-form-eyebrow"),
+	formCancel: document.getElementById("inventory-form-cancel"),
+	formSubmit: document.getElementById("inventory-form-submit"),
+	formReset: document.getElementById("inventory-form-reset"),
+	formError: document.getElementById("inventory-form-error"),
+	formProductName: document.getElementById("form-product-name"),
+	formCategory: document.getElementById("form-category"),
+	formQuantity: document.getElementById("form-quantity"),
+	formPrice: document.getElementById("form-price"),
+	formSupplier: document.getElementById("form-supplier"),
 	totalItems: document.getElementById("total-items"),
 	totalQty: document.getElementById("total-qty"),
 	lowStock: document.getElementById("low-stock"),
@@ -30,6 +47,98 @@ function money(value) {
 function toSafeNumber(value) {
 	const num = Number(value);
 	return Number.isFinite(num) ? num : 0;
+}
+
+function setFormError(message) {
+	refs.formError.textContent = message;
+}
+
+function setFormSubmitting(isSubmitting) {
+	state.isSubmittingForm = isSubmitting;
+	refs.formSubmit.disabled = isSubmitting;
+	refs.formCancel.disabled = isSubmitting;
+	refs.formReset.disabled = isSubmitting;
+	refs.formProductName.disabled = isSubmitting;
+	refs.formCategory.disabled = isSubmitting;
+	refs.formQuantity.disabled = isSubmitting;
+	refs.formPrice.disabled = isSubmitting;
+	refs.formSupplier.disabled = isSubmitting;
+	refs.addBtn.disabled = isSubmitting;
+}
+
+function resetFormFields() {
+	refs.form.reset();
+	refs.formQuantity.value = "0";
+	refs.formPrice.value = "0.00";
+	setFormError("");
+}
+
+function openForm(mode, item = null) {
+	state.formMode = mode;
+	state.editingId = mode === "edit" && item ? toSafeNumber(item.id) : null;
+	refs.formPanel.hidden = false;
+	setFormError("");
+
+	if (mode === "edit" && item) {
+		refs.formEyebrow.textContent = "Inventory Form - Edit Mode";
+		refs.formTitle.textContent = `Edit Inventory Item #${item.id}`;
+		refs.formSubmit.textContent = "Save Changes";
+		refs.formProductName.value = item.product_name ?? "";
+		refs.formCategory.value = item.category ?? "";
+		refs.formQuantity.value = String(toSafeNumber(item.quantity));
+		refs.formPrice.value = String(toSafeNumber(item.price));
+		refs.formSupplier.value = item.supplier ?? "";
+	} else {
+		refs.formEyebrow.textContent = "Inventory Form - Create Mode";
+		refs.formTitle.textContent = "Add Inventory Item";
+		refs.formSubmit.textContent = "Save Item";
+		resetFormFields();
+	}
+
+	refs.formProductName.focus();
+	refs.formPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function closeForm() {
+	refs.formPanel.hidden = true;
+	state.editingId = null;
+	state.formMode = "create";
+	setFormError("");
+	setFormSubmitting(false);
+}
+
+function getPayloadFromForm() {
+	const productName = refs.formProductName.value.trim();
+	const category = refs.formCategory.value.trim();
+	const quantityRaw = refs.formQuantity.value.trim();
+	const priceRaw = refs.formPrice.value.trim();
+	const supplier = refs.formSupplier.value.trim();
+
+	if (!productName || !category) {
+		setFormError("Product name and category are required.");
+		return null;
+	}
+
+	const quantity = Number(quantityRaw);
+	if (!Number.isInteger(quantity) || quantity < 0) {
+		setFormError("Quantity must be a whole number greater than or equal to 0.");
+		return null;
+	}
+
+	const price = Number(priceRaw);
+	if (!Number.isFinite(price) || price < 0) {
+		setFormError("Price must be a number greater than or equal to 0.");
+		return null;
+	}
+
+	setFormError("");
+	return {
+		product_name: productName,
+		category,
+		quantity,
+		price,
+		supplier: supplier || null,
+	};
 }
 
 function setStatus(label, tone) {
@@ -129,6 +238,9 @@ function renderTable() {
 			<td>${money(row.price)}</td>
 			<td>${row.supplier ?? "-"}</td>
 			<td class="row-actions">
+				<button class="edit-btn" type="button" data-edit-id="${rowId}">
+					Edit
+				</button>
 				<button class="danger-btn" type="button" data-delete-id="${rowId}" ${isDeleting ? "disabled" : ""}>
 					${isDeleting ? "Deleting..." : "Delete"}
 				</button>
@@ -136,6 +248,102 @@ function renderTable() {
 		`;
 		refs.tableBody.appendChild(tr);
 	}
+}
+
+async function createInventoryItem(payload) {
+	setStatus("Creating inventory item", "neutral");
+	setFormSubmitting(true);
+
+	try {
+		const response = await fetch("/inventory", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(payload),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Create failed: ${response.status}`);
+		}
+
+		const created = await response.json();
+		state.inventory = [...state.inventory, created];
+		buildCategoryFilter(state.inventory);
+		updateStats(state.inventory);
+		setStatus(`Created item #${created.id}`, "ok");
+		applyFilters();
+		closeForm();
+	} catch (error) {
+		setFormError("Could not save new item. Please verify fields and try again.");
+		setStatus("Create failed. Try again.", "error");
+		console.error("Inventory create error:", error);
+	} finally {
+		setFormSubmitting(false);
+	}
+}
+
+async function updateInventoryItem(id, payload) {
+	if (!Number.isInteger(id) || id <= 0) {
+		setStatus("Edit aborted: invalid item id", "error");
+		return;
+	}
+
+	setStatus(`Updating item #${id}`, "neutral");
+	setFormSubmitting(true);
+
+	try {
+		const response = await fetch(`/inventory/${id}`, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(payload),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Update failed: ${response.status}`);
+		}
+
+		const updated = await response.json();
+		state.inventory = state.inventory.map((item) =>
+			toSafeNumber(item.id) === id ? updated : item
+		);
+		buildCategoryFilter(state.inventory);
+		updateStats(state.inventory);
+		setStatus(`Updated item #${id}`, "ok");
+		applyFilters();
+		closeForm();
+	} catch (error) {
+		setFormError("Could not update item. Please verify fields and try again.");
+		setStatus("Update failed. Try again.", "error");
+		console.error("Inventory update error:", error);
+	} finally {
+		setFormSubmitting(false);
+	}
+}
+
+async function handleFormSubmit(event) {
+	event.preventDefault();
+	if (state.isSubmittingForm) {
+		return;
+	}
+
+	const payload = getPayloadFromForm();
+	if (!payload) {
+		return;
+	}
+
+	if (state.formMode === "edit") {
+		if (!Number.isInteger(state.editingId) || state.editingId <= 0) {
+			setFormError("Edit mode lost selected record. Please retry.");
+			return;
+		}
+		await updateInventoryItem(state.editingId, payload);
+		return;
+	}
+
+	await createInventoryItem(payload);
 }
 
 async function deleteInventoryItem(id) {
@@ -209,10 +417,39 @@ async function loadInventory() {
 function wireEvents() {
 	refs.searchInput.addEventListener("input", applyFilters);
 	refs.categoryFilter.addEventListener("change", applyFilters);
+	refs.addBtn.addEventListener("click", () => {
+		openForm("create");
+	});
+	refs.form.addEventListener("submit", (event) => {
+		void handleFormSubmit(event);
+	});
+	refs.formCancel.addEventListener("click", closeForm);
+	refs.formReset.addEventListener("click", () => {
+		if (state.formMode === "edit") {
+			const existing = state.inventory.find((item) => toSafeNumber(item.id) === state.editingId);
+			if (existing) {
+				openForm("edit", existing);
+				return;
+			}
+		}
+		resetFormFields();
+	});
 	refs.refreshBtn.addEventListener("click", loadInventory);
 	refs.tableBody.addEventListener("click", (event) => {
 		const target = event.target;
 		if (!(target instanceof HTMLElement)) {
+			return;
+		}
+
+		const editButton = target.closest("button[data-edit-id]");
+		if (editButton instanceof HTMLButtonElement) {
+			const id = Number(editButton.dataset.editId);
+			const existing = state.inventory.find((item) => toSafeNumber(item.id) === id);
+			if (!existing) {
+				setStatus(`Could not find item #${id} in current table view.`, "error");
+				return;
+			}
+			openForm("edit", existing);
 			return;
 		}
 

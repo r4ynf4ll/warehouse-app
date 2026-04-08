@@ -227,6 +227,55 @@ body {
 	grid-template-columns: repeat(4, minmax(120px, 1fr));
 }
 
+.inventory-form-panel {
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	background: linear-gradient(180deg, #ffffff, #fff9ef);
+	padding: 0.85rem;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.form-header-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.8rem;
+	margin-bottom: 0.65rem;
+	flex-wrap: wrap;
+}
+
+.form-header-row h3 {
+	margin: 0.2rem 0 0;
+	font-size: 1.15rem;
+}
+
+.inventory-form {
+	display: grid;
+	gap: 0.65rem;
+	grid-template-columns: repeat(2, minmax(180px, 1fr));
+}
+
+.inventory-form .control-group input {
+	min-width: 0;
+	width: 100%;
+}
+
+.inventory-form-error {
+	margin: 0;
+	min-height: 1.15rem;
+	font-size: 0.87rem;
+	font-weight: 600;
+	color: var(--danger);
+	grid-column: 1 / -1;
+}
+
+.inventory-form-actions {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	grid-column: 1 / -1;
+}
+
 .stat-card {
 	padding: 0.8rem;
 	border-radius: 12px;
@@ -329,6 +378,27 @@ tbody tr:hover {
 	cursor: not-allowed;
 }
 
+.edit-btn {
+	border: 1px solid #2b646c;
+	border-radius: 8px;
+	background: linear-gradient(160deg, #4f98a2, #317984);
+	color: #fff;
+	padding: 0.4rem 0.55rem;
+	font: 700 0.78rem "Space Grotesk", "Segoe UI", sans-serif;
+	cursor: pointer;
+	letter-spacing: 0.03em;
+	margin-right: 0.35rem;
+}
+
+.edit-btn:hover {
+	filter: brightness(1.06);
+}
+
+.edit-btn:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
 .future-tools {
 	border: 1px dashed #b8ab90;
 	border-radius: 12px;
@@ -376,6 +446,10 @@ tbody tr:hover {
 	}
 
 	.stats-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.inventory-form {
 		grid-template-columns: 1fr;
 	}
 

@@ -12,3 +12,19 @@ class Inventory(SQLModel, table=True):
     quantity: int
     price: float
     supplier: str | None = None
+
+
+class InventoryCreate(SQLModel):
+    product_name: str
+    category: str
+    quantity: int
+    price: float
+    supplier: str | None = None
+
+
+class InventoryUpdate(SQLModel):
+    product_name: str
+    category: str
+    quantity: int
+    price: float
+    supplier: str | None = None
