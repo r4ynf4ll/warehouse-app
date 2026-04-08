@@ -28,3 +28,13 @@ class InventoryUpdate(SQLModel):
     quantity: int
     price: float
     supplier: str | None = None
+
+
+class User(SQLModel, table=True):
+    username: str = Field(primary_key=True)
+    password_hash: str
+
+
+class UserRegister(SQLModel):
+    username: str
+    password: str

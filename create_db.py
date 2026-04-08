@@ -14,6 +14,13 @@ cursor.execute("""
     )
 """)
 
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user (
+        username TEXT PRIMARY KEY,
+        password_hash TEXT NOT NULL
+    )
+""")
+
 sample_data = [
     ("Basketball", "Balls", 45, 29.99, "SportsCo"),
     ("Soccer Ball", "Balls", 60, 24.99, "KickGear"),

@@ -1,10 +1,32 @@
+import bcrypt
+
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session, SQLModel, select
 
-from models import Inventory, InventoryCreate, InventoryUpdate, engine
+from models import Inventory, InventoryCreate, InventoryUpdate, User, UserRegister, engine
 
 app = FastAPI()
+
+
+@app.post("/register")
+def register_user(payload: UserRegister):
+    username = payload.username.strip()
+    password = payload.password
+
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="Username and password are required")
+
+    with Session(engine) as session:
+        existing = session.exec(select(User).where(User.username == username)).first()
+        if existing is not None:
+            raise HTTPException(status_code=400, detail="Username already exists")
+
+        password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        user = User(username=username, password_hash=password_hash)
+        session.add(user)
+        session.commit()
+        return {"username": user.username}
 
 @app.get("/inventory")
 def get_inventory():
