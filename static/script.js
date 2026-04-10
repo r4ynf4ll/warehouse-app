@@ -11,6 +11,7 @@ const state = {
 	isLoggingIn: false,
 	currentUser: null,
 	isAuthenticated: false,
+	authMode: "login",
 };
 
 const refs = {
@@ -32,6 +33,12 @@ const refs = {
 	loginMessage: document.getElementById("login-message"),
 	authStatus: document.getElementById("auth-status"),
 	logoutBtn: document.getElementById("logout-btn"),
+	authTabLogin: document.getElementById("auth-tab-login"),
+	authTabRegister: document.getElementById("auth-tab-register"),
+	authGate: document.getElementById("auth-shell"),
+	loginPanel: document.getElementById("login-panel"),
+	registerPanel: document.getElementById("register-panel"),
+	appLayout: document.getElementById("app-layout"),
 	addBtn: document.getElementById("add-btn"),
 	refreshBtn: document.getElementById("refresh-btn"),
 	formPanel: document.getElementById("inventory-form-panel"),
@@ -85,9 +92,22 @@ function setAuthStatus(message, tone) {
 	refs.authStatus.dataset.tone = tone || "neutral";
 }
 
+function setAuthMode(mode) {
+	state.authMode = mode;
+	const isLogin = mode === "login";
+	refs.authTabLogin.setAttribute("aria-selected", String(isLogin));
+	refs.authTabRegister.setAttribute("aria-selected", String(!isLogin));
+	refs.loginPanel.hidden = !isLogin;
+	refs.registerPanel.hidden = isLogin;
+	refs.authTabLogin.classList.toggle("active", isLogin);
+	refs.authTabRegister.classList.toggle("active", !isLogin);
+}
+
 function setAuthenticated(isAuthenticated, username = null) {
 	state.isAuthenticated = isAuthenticated;
 	state.currentUser = isAuthenticated ? username : null;
+	refs.authGate.hidden = isAuthenticated;
+	refs.appLayout.hidden = !isAuthenticated;
 	refs.addBtn.disabled = !isAuthenticated || state.isSubmittingForm;
 	refs.refreshBtn.disabled = !isAuthenticated;
 	refs.logoutBtn.disabled = !isAuthenticated;
@@ -282,6 +302,7 @@ async function handleLogout() {
 		}
 
 		setAuthenticated(false);
+		setAuthMode("login");
 		setLoginMessage("", "neutral");
 		clearInventoryView();
 		setStatus("Signed out", "neutral");
@@ -675,6 +696,12 @@ async function loadInventory() {
 }
 
 function wireEvents() {
+	refs.authTabLogin.addEventListener("click", () => {
+		setAuthMode("login");
+	});
+	refs.authTabRegister.addEventListener("click", () => {
+		setAuthMode("register");
+	});
 	refs.registerForm.addEventListener("submit", (event) => {
 		void handleRegisterSubmit(event);
 	});
@@ -733,10 +760,7 @@ function wireEvents() {
 
 	for (const header of refs.sortableHeaders) {
 		header.addEventListener("click", () => {
-setAuthenticated(false);
-clearInventoryView();
-setStatus("Sign in to load inventory", "neutral");
-void loadInventory();
+		const newSort = header.dataset.sort;
 			if (!newSort) {
 				return;
 			}
@@ -752,6 +776,13 @@ void loadInventory();
 		});
 	}
 }
+
+wireEvents();
+setAuthMode("login");
+setAuthenticated(false);
+clearInventoryView();
+setStatus("Sign in to load inventory", "neutral");
+void loadInventory();
 
 wireEvents();
 loadInventory();

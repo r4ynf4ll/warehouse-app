@@ -12,51 +12,62 @@
 <body>
 	<div class="page-bg" aria-hidden="true"></div>
 
-	<main class="layout">
+	<section class="auth-gate panel" aria-label="Authentication" id="auth-shell">
+		<div class="auth-hero">
+			<p class="eyebrow">Access</p>
+			<h1>Sign in or create an account</h1>
+			<p class="auth-copy">Use the tabs below to register a new user or log in with an existing account.</p>
+		</div>
+
+		<div class="auth-tabs" role="tablist" aria-label="Authentication tabs">
+			<button id="auth-tab-login" class="auth-tab active" type="button" role="tab" aria-selected="true" aria-controls="login-panel">Log In</button>
+			<button id="auth-tab-register" class="auth-tab" type="button" role="tab" aria-selected="false" aria-controls="register-panel">Register</button>
+		</div>
+
+		<div id="login-panel" class="auth-panel" role="tabpanel" aria-labelledby="auth-tab-login">
+			<form id="login-form" class="auth-form auth-form-wide" novalidate>
+				<label class="control-group" for="login-username">
+					<span>Username</span>
+					<input id="login-username" name="username" type="text" maxlength="80" autocomplete="username" required>
+				</label>
+
+				<label class="control-group" for="login-password">
+					<span>Password</span>
+					<input id="login-password" name="password" type="password" minlength="6" autocomplete="current-password" required>
+				</label>
+
+				<p id="login-message" class="auth-message" role="status" aria-live="polite"></p>
+				<button id="login-submit" class="btn" type="submit">Log In</button>
+			</form>
+		</div>
+
+		<div id="register-panel" class="auth-panel" role="tabpanel" aria-labelledby="auth-tab-register" hidden>
+			<form id="register-form" class="register-form" novalidate>
+				<label class="control-group" for="register-username">
+					<span>Username</span>
+					<input id="register-username" name="username" type="text" maxlength="80" autocomplete="username" required>
+				</label>
+
+				<label class="control-group" for="register-password">
+					<span>Password</span>
+					<input id="register-password" name="password" type="password" minlength="6" autocomplete="new-password" required>
+				</label>
+
+				<label class="control-group" for="register-password-confirm">
+					<span>Confirm Password</span>
+					<input id="register-password-confirm" name="password_confirm" type="password" minlength="6" autocomplete="new-password" required>
+				</label>
+
+				<p id="register-message" class="register-message" role="status" aria-live="polite"></p>
+				<button id="register-submit" class="btn" type="submit">Register</button>
+			</form>
+		</div>
+	</section>
+
+	<main class="layout" id="app-layout" hidden>
 		<aside class="panel side-panel">
 			<h1>Warehouse DB</h1>
 			<p class="muted">Inventory administration</p>
-
-			<section class="panel-block" aria-label="User registration">
-				<h2>Create Account</h2>
-				<form id="register-form" class="register-form" novalidate>
-					<label class="control-group" for="register-username">
-						<span>Username</span>
-						<input id="register-username" name="username" type="text" maxlength="80" autocomplete="username" required>
-					</label>
-
-					<label class="control-group" for="register-password">
-						<span>Password</span>
-						<input id="register-password" name="password" type="password" minlength="6" autocomplete="new-password" required>
-					</label>
-
-					<label class="control-group" for="register-password-confirm">
-						<span>Confirm Password</span>
-						<input id="register-password-confirm" name="password_confirm" type="password" minlength="6" autocomplete="new-password" required>
-					</label>
-
-					<p id="register-message" class="register-message" role="status" aria-live="polite"></p>
-					<button id="register-submit" class="btn" type="submit">Register</button>
-				</form>
-			</section>
-
-			<section class="panel-block" aria-label="User login">
-				<h2>Sign In</h2>
-				<form id="login-form" class="auth-form" novalidate>
-					<label class="control-group" for="login-username">
-						<span>Username</span>
-						<input id="login-username" name="username" type="text" maxlength="80" autocomplete="username" required>
-					</label>
-
-					<label class="control-group" for="login-password">
-						<span>Password</span>
-						<input id="login-password" name="password" type="password" minlength="6" autocomplete="current-password" required>
-					</label>
-
-					<p id="login-message" class="auth-message" role="status" aria-live="polite"></p>
-					<button id="login-submit" class="btn" type="submit">Log In</button>
-				</form>
-			</section>
 
 			<section class="panel-block">
 				<h2>Auth Status</h2>
