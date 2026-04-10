@@ -17,6 +17,55 @@
 			<h1>Warehouse DB</h1>
 			<p class="muted">Inventory administration</p>
 
+			<section class="panel-block" aria-label="User registration">
+				<h2>Create Account</h2>
+				<form id="register-form" class="register-form" novalidate>
+					<label class="control-group" for="register-username">
+						<span>Username</span>
+						<input id="register-username" name="username" type="text" maxlength="80" autocomplete="username" required>
+					</label>
+
+					<label class="control-group" for="register-password">
+						<span>Password</span>
+						<input id="register-password" name="password" type="password" minlength="6" autocomplete="new-password" required>
+					</label>
+
+					<label class="control-group" for="register-password-confirm">
+						<span>Confirm Password</span>
+						<input id="register-password-confirm" name="password_confirm" type="password" minlength="6" autocomplete="new-password" required>
+					</label>
+
+					<p id="register-message" class="register-message" role="status" aria-live="polite"></p>
+					<button id="register-submit" class="btn" type="submit">Register</button>
+				</form>
+			</section>
+
+			<section class="panel-block" aria-label="User login">
+				<h2>Sign In</h2>
+				<form id="login-form" class="auth-form" novalidate>
+					<label class="control-group" for="login-username">
+						<span>Username</span>
+						<input id="login-username" name="username" type="text" maxlength="80" autocomplete="username" required>
+					</label>
+
+					<label class="control-group" for="login-password">
+						<span>Password</span>
+						<input id="login-password" name="password" type="password" minlength="6" autocomplete="current-password" required>
+					</label>
+
+					<p id="login-message" class="auth-message" role="status" aria-live="polite"></p>
+					<button id="login-submit" class="btn" type="submit">Log In</button>
+				</form>
+			</section>
+
+			<section class="panel-block">
+				<h2>Auth Status</h2>
+				<p id="auth-status" class="status-chip">Not signed in</p>
+				<div class="auth-actions">
+					<button id="logout-btn" class="btn ghost" type="button" disabled>Log Out</button>
+				</div>
+			</section>
+
 			<nav class="nav-list" aria-label="Primary">
 				<button class="nav-btn nav-btn-active" type="button">Inventory Table</button>
 				<button class="nav-btn" type="button" disabled>Incoming Orders</button>

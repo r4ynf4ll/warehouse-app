@@ -7,6 +7,10 @@ const state = {
 	formMode: "create",
 	editingId: null,
 	isSubmittingForm: false,
+	isRegistering: false,
+	isLoggingIn: false,
+	currentUser: null,
+	isAuthenticated: false,
 };
 
 const refs = {
@@ -15,6 +19,19 @@ const refs = {
 	apiStatus: document.getElementById("api-status"),
 	searchInput: document.getElementById("search-input"),
 	categoryFilter: document.getElementById("category-filter"),
+	registerForm: document.getElementById("register-form"),
+	registerUsername: document.getElementById("register-username"),
+	registerPassword: document.getElementById("register-password"),
+	registerPasswordConfirm: document.getElementById("register-password-confirm"),
+	registerSubmit: document.getElementById("register-submit"),
+	registerMessage: document.getElementById("register-message"),
+	loginForm: document.getElementById("login-form"),
+	loginUsername: document.getElementById("login-username"),
+	loginPassword: document.getElementById("login-password"),
+	loginSubmit: document.getElementById("login-submit"),
+	loginMessage: document.getElementById("login-message"),
+	authStatus: document.getElementById("auth-status"),
+	logoutBtn: document.getElementById("logout-btn"),
 	addBtn: document.getElementById("add-btn"),
 	refreshBtn: document.getElementById("refresh-btn"),
 	formPanel: document.getElementById("inventory-form-panel"),
@@ -51,6 +68,228 @@ function toSafeNumber(value) {
 
 function setFormError(message) {
 	refs.formError.textContent = message;
+}
+
+function setRegisterMessage(message, tone) {
+	refs.registerMessage.textContent = message;
+	refs.registerMessage.dataset.tone = tone || "neutral";
+}
+
+function setLoginMessage(message, tone) {
+	refs.loginMessage.textContent = message;
+	refs.loginMessage.dataset.tone = tone || "neutral";
+}
+
+function setAuthStatus(message, tone) {
+	refs.authStatus.textContent = message;
+	refs.authStatus.dataset.tone = tone || "neutral";
+}
+
+function setAuthenticated(isAuthenticated, username = null) {
+	state.isAuthenticated = isAuthenticated;
+	state.currentUser = isAuthenticated ? username : null;
+	refs.addBtn.disabled = !isAuthenticated || state.isSubmittingForm;
+	refs.refreshBtn.disabled = !isAuthenticated;
+	refs.logoutBtn.disabled = !isAuthenticated;
+	if (!isAuthenticated) {
+		setAuthStatus("Not signed in", "neutral");
+	} else if (username) {
+		setAuthStatus(`Signed in as ${username}`, "ok");
+	}
+}
+
+function clearInventoryView(message = "Sign in to view inventory.") {
+	state.inventory = [];
+	state.filtered = [];
+	refs.tableBody.innerHTML = "";
+	refs.tableMessage.textContent = message;
+	updateStats([]);
+	buildCategoryFilter([]);
+}
+
+function setRegisterSubmitting(isSubmitting) {
+	state.isRegistering = isSubmitting;
+	refs.registerSubmit.disabled = isSubmitting;
+	refs.registerUsername.disabled = isSubmitting;
+	refs.registerPassword.disabled = isSubmitting;
+	refs.registerPasswordConfirm.disabled = isSubmitting;
+}
+
+function setLoginSubmitting(isSubmitting) {
+	state.isLoggingIn = isSubmitting;
+	refs.loginSubmit.disabled = isSubmitting;
+	refs.loginUsername.disabled = isSubmitting;
+	refs.loginPassword.disabled = isSubmitting;
+}
+
+function getRegisterPayload() {
+	const username = refs.registerUsername.value.trim();
+	const password = refs.registerPassword.value;
+	const passwordConfirm = refs.registerPasswordConfirm.value;
+
+	if (!username || !password || !passwordConfirm) {
+		setRegisterMessage("Username and password are required.", "error");
+		return null;
+	}
+
+	if (password.length < 6) {
+		setRegisterMessage("Password must be at least 6 characters.", "error");
+		return null;
+	}
+
+	if (password !== passwordConfirm) {
+		setRegisterMessage("Passwords do not match.", "error");
+		return null;
+	}
+
+	setRegisterMessage("", "neutral");
+	return {
+		username,
+		password,
+	};
+}
+
+function getLoginPayload() {
+	const username = refs.loginUsername.value.trim();
+	const password = refs.loginPassword.value;
+
+	if (!username || !password) {
+		setLoginMessage("Username and password are required.", "error");
+		return null;
+	}
+
+	setLoginMessage("", "neutral");
+	return {
+		username,
+		password,
+	};
+}
+
+async function handleRegisterSubmit(event) {
+	event.preventDefault();
+	if (state.isRegistering) {
+		return;
+	}
+
+	const payload = getRegisterPayload();
+	if (!payload) {
+		return;
+	}
+
+	setRegisterSubmitting(true);
+	setRegisterMessage("Creating account...", "neutral");
+
+	try {
+		const response = await fetch("/register", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(payload),
+		});
+
+		if (!response.ok) {
+			let detail = "Registration failed.";
+			try {
+				const errorPayload = await response.json();
+				if (errorPayload && typeof errorPayload.detail === "string") {
+					detail = errorPayload.detail;
+				}
+			} catch {
+				// Keep fallback detail when response body is not JSON.
+			}
+			throw new Error(detail);
+		}
+
+		const createdUser = await response.json();
+		setRegisterMessage(`Registered user: ${createdUser.username}`, "ok");
+		refs.registerForm.reset();
+	} catch (error) {
+		const message = error instanceof Error ? error.message : "Registration failed.";
+		setRegisterMessage(message, "error");
+		console.error("Register error:", error);
+	} finally {
+		setRegisterSubmitting(false);
+	}
+}
+
+async function handleLoginSubmit(event) {
+	event.preventDefault();
+	if (state.isLoggingIn) {
+		return;
+	}
+
+	const payload = getLoginPayload();
+	if (!payload) {
+		return;
+	}
+
+	setLoginSubmitting(true);
+	setLoginMessage("Signing in...", "neutral");
+
+	try {
+		const response = await fetch("/login", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(payload),
+		});
+
+		if (!response.ok) {
+			let detail = "Login failed.";
+			try {
+				const errorPayload = await response.json();
+				if (errorPayload && typeof errorPayload.detail === "string") {
+					detail = errorPayload.detail;
+				}
+			} catch {
+				// Keep fallback detail when response body is not JSON.
+			}
+			throw new Error(detail);
+		}
+
+		const loggedInUser = await response.json();
+		setAuthenticated(true, loggedInUser.username);
+		setLoginMessage(loggedInUser.message || `Signed in as ${loggedInUser.username}`, "ok");
+		refs.loginForm.reset();
+		await loadInventory();
+	} catch (error) {
+		const message = error instanceof Error ? error.message : "Login failed.";
+		setLoginMessage(message, "error");
+		setAuthenticated(false);
+		console.error("Login error:", error);
+	} finally {
+		setLoginSubmitting(false);
+	}
+}
+
+async function handleLogout() {
+	if (!state.isAuthenticated) {
+		return;
+	}
+
+	refs.logoutBtn.disabled = true;
+	setStatus("Signing out", "neutral");
+
+	try {
+		const response = await fetch("/logout", {
+			method: "POST",
+		});
+
+		if (!response.ok) {
+			throw new Error(`Logout failed: ${response.status}`);
+		}
+
+		setAuthenticated(false);
+		setLoginMessage("", "neutral");
+		clearInventoryView();
+		setStatus("Signed out", "neutral");
+	} catch (error) {
+		setStatus("Logout failed. Try again.", "error");
+		setAuthenticated(true, state.currentUser);
+		console.error("Logout error:", error);
+	}
 }
 
 function setFormSubmitting(isSubmitting) {
@@ -251,6 +490,11 @@ function renderTable() {
 }
 
 async function createInventoryItem(payload) {
+	if (!state.isAuthenticated) {
+		setStatus("Sign in before creating inventory items.", "error");
+		return;
+	}
+
 	setStatus("Creating inventory item", "neutral");
 	setFormSubmitting(true);
 
@@ -286,6 +530,10 @@ async function createInventoryItem(payload) {
 async function updateInventoryItem(id, payload) {
 	if (!Number.isInteger(id) || id <= 0) {
 		setStatus("Edit aborted: invalid item id", "error");
+		return;
+	}
+	if (!state.isAuthenticated) {
+		setStatus("Sign in before editing inventory items.", "error");
 		return;
 	}
 
@@ -351,6 +599,10 @@ async function deleteInventoryItem(id) {
 		setStatus("Delete aborted: invalid item id", "error");
 		return;
 	}
+	if (!state.isAuthenticated) {
+		setStatus("Sign in before deleting inventory items.", "error");
+		return;
+	}
 
 	const confirmed = window.confirm(`Delete inventory item #${id}? This cannot be undone.`);
 	if (!confirmed) {
@@ -385,12 +637,24 @@ async function deleteInventoryItem(id) {
 }
 
 async function loadInventory() {
+	if (!state.isAuthenticated) {
+		clearInventoryView();
+		setStatus("Sign in to load inventory", "neutral");
+		return;
+	}
+
 	refs.tableMessage.textContent = "Loading inventory...";
 	refs.refreshBtn.disabled = true;
 	setStatus("Loading /inventory", "neutral");
 
 	try {
 		const response = await fetch("/inventory");
+		if (response.status === 401) {
+			setAuthenticated(false);
+			clearInventoryView();
+			setStatus("Session expired. Sign in again.", "error");
+			return;
+		}
 		if (!response.ok) {
 			throw new Error(`Request failed: ${response.status}`);
 		}
@@ -402,19 +666,24 @@ async function loadInventory() {
 		setStatus(`Connected - ${state.inventory.length} records`, "ok");
 		applyFilters();
 	} catch (error) {
-		state.inventory = [];
-		state.filtered = [];
-		refs.tableBody.innerHTML = "";
-		refs.tableMessage.textContent = "Could not load inventory. Check backend and retry.";
-		updateStats([]);
+		clearInventoryView("Could not load inventory. Check backend and retry.");
 		setStatus("API error", "error");
 		console.error("Inventory load error:", error);
 	} finally {
-		refs.refreshBtn.disabled = false;
+		refs.refreshBtn.disabled = !state.isAuthenticated;
 	}
 }
 
 function wireEvents() {
+	refs.registerForm.addEventListener("submit", (event) => {
+		void handleRegisterSubmit(event);
+	});
+	refs.loginForm.addEventListener("submit", (event) => {
+		void handleLoginSubmit(event);
+	});
+	refs.logoutBtn.addEventListener("click", () => {
+		void handleLogout();
+	});
 	refs.searchInput.addEventListener("input", applyFilters);
 	refs.categoryFilter.addEventListener("change", applyFilters);
 	refs.addBtn.addEventListener("click", () => {
@@ -464,7 +733,10 @@ function wireEvents() {
 
 	for (const header of refs.sortableHeaders) {
 		header.addEventListener("click", () => {
-			const newSort = header.dataset.sort;
+setAuthenticated(false);
+clearInventoryView();
+setStatus("Sign in to load inventory", "neutral");
+void loadInventory();
 			if (!newSort) {
 				return;
 			}

@@ -38,3 +38,8 @@ class User(SQLModel, table=True):
 class UserRegister(SQLModel):
     username: str
     password: str
+
+
+class UserLogin(SQLModel):
+    username: str
+    password: str
